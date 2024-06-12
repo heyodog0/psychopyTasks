@@ -2,7 +2,7 @@
 
 Run the python code through psychopy. 
 
-# Details on task can be found here: 
+## Details on task can be found here: 
 
 Continuous Performance Task (CPT-X):
 - https://www.neurobs.com/manager/content/docs/psychlab101_experiments/CPT-X/description.html
