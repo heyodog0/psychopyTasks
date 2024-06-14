@@ -1,5 +1,6 @@
-from psychopy import visual, core, event, clock, data, logging, gui
+from psychopy import visual, sound, core, event, clock, data, logging, gui
 import random
+import psychtoolbox as ptb
 import os
 import pandas as pd
 from datetime import datetime
@@ -12,12 +13,13 @@ if not dlg.OK:
 participant_id = exp_info['participant_id']
 date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-win = visual.Window([400, 400], color="black", fullscr = True)
+win = visual.Window([400, 400], color="white", fullscr = True)
 fixation = visual.TextStim(win, text="+", color="gray", height = .1)
-go_stim_a = visual.TextStim(win, text="<", color="white", height = .5, pos = (0, 0.03))
-go_stim_z = visual.TextStim(win, text=">", color="white", height = .5, pos = (0, 0.03))
+go_stim_a = visual.TextStim(win, text="<<", color="black", height = .5, pos = (0, 0.03))
+go_stim_z = visual.TextStim(win, text=">>", color="black", height = .5, pos = (0, 0.03))
 stop_stim = visual.TextStim(win, text="X", color="red", height = .5)
-feedback_stim = visual.TextStim(win, text="", color="white")
+feedback_stim = visual.TextStim(win, text="", color="black")
+Beep = sound.Sound('A')
 
 # Create a data handler
 exp_info['date'] = date_str
@@ -26,7 +28,7 @@ this_exp = data.ExperimentHandler(dataFileName=filename, extraInfo=exp_info)
 logging.LogFile(f"{filename}.log", level=logging.EXP)
 
 # Instructions
-instructions = visual.TextStim(win, text='Press the left key when prompted with the target "<" and the right key when prompted with ">". Whenever a red X appears, do not press any key. Now, press any key to start.', color='white')
+instructions = visual.TextStim(win, text='Press the left key when prompted with the target "<<" and the right key when prompted with ">>". Whenever a red X appears, do not press any key. Now, press any key to start.', color='black')
 instructions.draw()
 win.flip()
 event.waitKeys()  
@@ -35,8 +37,8 @@ event.waitKeys()
 
 def block(block_num):
     # Parameters
-    num_trials = 1
-    num_stop_trials = 0
+    num_trials = 3
+    num_stop_trials = 1
     stop_signal_delay = 0.2
     stop_signal_delay_increment = 3/60
     trial_duration = 1.0  
@@ -55,7 +57,7 @@ def block(block_num):
 
         # Select go stimulus
         go_stim = random.choice([go_stim_a, go_stim_z])
-        expected_response = "left" if go_stim.text == "<" else "right"
+        expected_response = "left" if go_stim.text == "<<" else "right"
     
         # Start reaction time clock
         rt_clock = clock.Clock()
@@ -69,6 +71,10 @@ def block(block_num):
         if trial == "stop":
             stop_stim.draw()
             win.flip()
+            nextFlip = win.getFutureFlipTime(clock='ptb')
+            
+            Beep.play(when=nextFlip)
+            
             core.wait(trial_duration - stop_signal_delay)
     
         # Collect response
@@ -135,7 +141,7 @@ def block(block_num):
     core.wait(3.0)
 
 # Run 4 blocks
-for block_num in range(4):
+for block_num in range(1):
     block(block_num)
 
 # Save data
