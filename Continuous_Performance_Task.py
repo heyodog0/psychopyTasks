@@ -124,7 +124,8 @@ def block(block_num):
         core.wait(isi_duration[(random.randrange(len(isi_duration)))])
         
     # End of the experiment
-    end_message_p1 = visual.TextStim(win, text=f'Block {block_num} complete!', color='black')
+    blocknum = block_num + 1
+    end_message_p1 = visual.TextStim(win, text=f'Block {blocknum}  complete!', color='black')
     end_message_p1.draw()
     end_message_p2 = visual.TextStim(win, text=f'Wait for experimenter to', color='black')
     win.flip()
@@ -135,9 +136,7 @@ for block_num in range(num_of_blocks):
     three_two_one() # ready, set, go
     
     # draw fixation before presenting stimulus
-    fixation.draw()
-    win.flip()
-    core.wait(isi_duration[(random.randrange(len(isi_duration)))])
+    draw_then_wait(fixation, (isi_duration[(random.randrange(len(isi_duration)))]))
     
     block(block_num) # block_num = block number
     
