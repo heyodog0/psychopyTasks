@@ -18,6 +18,9 @@ win = visual.Window([400, 400], color='white', fullscr = True)
 fixation = visual.TextStim(win, text="+", color="gray", height = 0.1)
 stimulus = visual.TextStim(win, text='', color='black', height=0.5)
 stim_duration = 0.25 
+num_of_blocks = 3 # number of blocks
+num_stimuli = 5
+num_targets = 1
 
 # Randomly shuffle ISIs
 # ISI static + ISI durations = [1s, 2s, 4s] 
@@ -27,9 +30,10 @@ isi_static_addition = .75
 # Set parameters
 letters = [chr(i) for i in range(65, 91)] # list of all uppercase letters
 letters.remove('X')
-participant_id = exp_info['participant_id']
-    
+target = 'X'
+
 # Create a data handler
+participant_id = exp_info['participant_id']
 filename = f"data/{participant_id}_cpt"
 this_exp = data.ExperimentHandler(dataFileName=filename, extraInfo=exp_info)
 logging.LogFile(f"{filename}.log", level=logging.EXP)
@@ -41,7 +45,25 @@ win.flip()
 event.waitKeys()  # Wait for a key press to start
 
 # Running the experiment
-def block(block_num, num_stimuli, num_targets):
+
+def draw_then_wait(x, duration):
+    x.draw()
+    win.flip()
+    core.wait(duration)
+
+def three_two_one():
+    ready = visual.TextStim(win, text = 'ready', color = "gray", height = 0.2)
+    three = visual.TextStim(win, text='3', color ="gray", height = 0.2)
+    two = visual.TextStim(win, text='2', color ="gray", height = 0.2)
+    one = visual.TextStim(win, text='1', color ="gray", height = 0.2)
+    go  = visual.TextStim(win, text = 'go!', color ="gray", height = 0.2)
+    draw_then_wait(ready, 1)
+    draw_then_wait(three, 1)
+    draw_then_wait(two, 1)
+    draw_then_wait(one, 1)
+    draw_then_wait(go, .75)
+
+def block(block_num):
     
     stimuli = random.choices(letters, k = num_stimuli - num_targets)  
     target_positions = random.sample(range(num_stimuli), num_targets) 
@@ -68,6 +90,7 @@ def block(block_num, num_stimuli, num_targets):
     
         # Record response
         keys = event.getKeys(keyList=["space", "escape"], timeStamped=rt_clock)
+        print(keys)
         
         # Check for quit during response collection
         for key, rt in keys:
@@ -101,14 +124,21 @@ def block(block_num, num_stimuli, num_targets):
         core.wait(isi_duration[(random.randrange(len(isi_duration)))])
         
     # End of the experiment
-    end_message = visual.TextStim(win, text=f'Block {block_num} complete!', color='black')
-    end_message.draw()
+    end_message_p1 = visual.TextStim(win, text=f'Block {block_num} complete!', color='black')
+    end_message_p1.draw()
+    end_message_p2 = visual.TextStim(win, text=f'Wait for experimenter to', color='black')
     win.flip()
-    core.wait(3)
-    event.waitKeys()  # Wait for a key press to start
+    core.wait(1)
+    event.waitKeys(keyList = ('p')) # Wait for a key press to start
     
-for block_num in range(2):
-    fixation_draw()
+for block_num in range(num_of_blocks):
+    three_two_one() # ready, set, go
+    
+    # draw fixation before presenting stimulus
+    fixation.draw()
+    win.flip()
+    core.wait(isi_duration[(random.randrange(len(isi_duration)))])
+    
     block(block_num) # block_num = block number
     
 # Save data
