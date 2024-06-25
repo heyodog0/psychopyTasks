@@ -7,13 +7,16 @@ import pandas as pd
 from datetime import datetime
 
 # Create a gui dialog
-exp_info = {'participant_id': ''}
+exp_info = {
+'participant_id':0, 'age':0,
+'gender':('male','female','other','prefer not to say')
+}
 dlg = gui.DlgFromDict(dictionary=exp_info, title='SSRT')
 if not dlg.OK:
-    core.quit()  
-    
+    core.quit() 
+
 # Directories
-set_directory = "/Users/heyodogo/Documents/psychopy data/SSRT/data"
+set_directory = "/Users/heyodogo/Documents/psychopy tasks/psychopy data/SSRT"
 base_dir = os.chdir(set_directory)
 
 # Create window + stimuli
@@ -23,6 +26,13 @@ go_stim_a      =  visual.TextStim(win, text="<<", color="black", height = .5, po
 go_stim_z      =  visual.TextStim(win, text=">>", color="black", height = .5, pos = (0, 0.03))
 stop_stim      =  visual.TextStim(win, text="X", color="red", height = .5)
 feedback_stim  =  visual.TextStim(win, text="", color="black")
+
+# Parameters
+stop_signal_delay             = 0.2   # delay between stimulus presentation and stop signal presentation
+stop_signal_delay_increment   = 3/60  # increments added or subtracted
+trial_duration                = 1.0   # duration of trial
+feedback_duration             = .500  # duration of feedback presentation
+number_of_blocks              = 5
 
 # Sound creation
 Beep = sound.Sound('A')
@@ -70,12 +80,6 @@ def three_two_one():
 
 def block(block_num, num_trials, num_stop_trials):
     
-    # Parameters
-    stop_signal_delay             = 0.2   # delay between stimulus presentation and stop signal presentation
-    stop_signal_delay_increment   = 3/60  # increments added or subtracted
-    trial_duration                = 1.0   # duration of trial
-    feedback_duration             = 1.0   # duration of feedback presentation
-    
     # Create trials array with go and stop trials
     trials = ["go"] * (num_trials - num_stop_trials) + ["stop"] * num_stop_trials
     
@@ -89,7 +93,7 @@ def block(block_num, num_trials, num_stop_trials):
     for trial_num, trial in enumerate(trials):
         
         # Fixation
-        draw_then_wait(fixation, 0.5)
+        draw_then_wait(fixation)
 
         # Select go stimulus
         go_stim = random.choice([go_stim_a, go_stim_z])
@@ -149,7 +153,10 @@ def block(block_num, num_trials, num_stop_trials):
                 stop_signal_delay += stop_signal_delay_increment
     
         # Draw feedback
-        draw_then_wait(feedback_stim, feedback_duration)
+        if keys:
+            draw_then_wait(feedback_stim, feedback_duration)
+        else:
+            draw_then_wait(feedback_stim, feedback_duration)
     
         # Store data
         this_exp.addData('block_num', block_num + 1)
@@ -170,32 +177,41 @@ def block(block_num, num_trials, num_stop_trials):
     
     # End of block message
     end_message_1 = visual.TextStim(win, text=f"Block {block_num + 1} Complete\nAvg RT: {avg_rt:.2f} s\nCorrect Omissions: {correct_omissions}", color='black')
-    end_message_2 = visual.TextStim(win, text =f"Experimenter will now proceed to the next block", color = 'black')
+    end_message_2 = visual.TextStim(win, text =f"Experimenter will now proceed to the next prompt screen", color = 'black')
     
     # Draw end messages #1 and #2
     draw_then_wait(end_message_1, 3)
     draw_then_waitkeys(end_message_2)
 
-# Practice Block
+# Practice Block #1
 for block_num in range(1):
     three_two_one()
-    block(block_num, 5, 1)
+    block(block_num, 20, 0)
     # block(_, #, _) = number of trials
     # block(_, _, #) = number of stop trials within num_trials
     
-    practice_end_message1 = visual.TextStim(win, text=f"Practice Block is Complete!", color='black')
-    practice_end_message2 = visual.TextStim(win, text=f"Experimenter will now proceed to the next non-practice block!", color= 'black')
-    
+    practice_end_message1 = visual.TextStim(win, text=f"Practice Block is Complete! Experimenter will now proceed to the next block!", color='black')
     draw_then_waitkeys(practice_end_message1)
-    draw_then_waitkeys(practice_end_message2)
-    
-# Actual trials    
-for block_num in range(3):
+
+# Practice Block #2
+for block_num in range(1):
     three_two_one()
-    block(block_num, 6, 2)
+    block(block_num, 20, 5)
+    # block(_, #, _) = number of trials
+    # block(_, _, #) = number of stop trials within num_trials
+
+practice_end_message2 = visual.TextStim(win, text=f" You have now completed your practice blocks!\nExperimenter will now proceed to the next experiment blocks!", color= 'black')
+draw_then_waitkeys(practice_end_message2)
+    
+# Actual Experimental trials    
+for block_num in range(number_of_blocks):
+    three_two_one()
+    block(block_num, 40, 10)
+    # block(_, #, _) = number of trials
+    # block(_, _, #) = number of stop trials within num_trials
     
 # Final end message
-final_end_message = visual.TextStim(win, text=f"Your done!!! Booyah", color = 'black')
+final_end_message = visual.TextStim(win, text=f"Your done! Thank you for your participation", color = 'black')
 draw_then_wait(final_end_message, 5)
 
 # Save data
