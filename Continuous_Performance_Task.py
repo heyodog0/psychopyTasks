@@ -1,17 +1,22 @@
+# Getting libraries
 from psychopy import visual, core, event, data, logging, gui, clock
+from numpy.random import choice
 import random
 import os
 import pandas as pd
 
 # Create a GUI dialog 
-exp_info = {'participant_id': ''}
+exp_info = {
+'participant_id':0, 'age':0,
+'gender':('male','female','other','prefer not to say')
+}
 dlg = gui.DlgFromDict(dictionary=exp_info, title='CPT')
 if not dlg.OK:
     core.quit() 
 
 # Directories
 # Set to directory you want the csv and data to go to:
-set_directory = "/Users/heyodogo/Documents/psychopy data/CPT"
+set_directory = "/Users/heyodogo/Documents/psychopy tasks/psychopy data/CPT"
 base_dir = os.chdir(set_directory)
 
 # Create a window + fixation/stimulus details
@@ -26,13 +31,16 @@ isi_static_addition  = .75
 
 # Set parameters
 letters        = [chr(i) for i in range(65, 91)] # list of all uppercase letters
-letters.remove('X')                             # Remove X from list of letters
-target         = 'X'                            # Set X as target
-stim_duration  = 0.250                          # Stimulus duration = 250ms (Connors CPT3)           
-num_of_blocks  = 3                              # number of blocks
+letters.remove('X')                              # Remove X from list of letters
+target         = 'X'                             # Set X as target
+stim_duration  = 0.250                           # Stimulus duration = 250ms (Connors CPT3)           
+num_of_blocks  = 6                               # number of blocks
 
 # Create a data handler
 participant_id  = exp_info['participant_id']
+age             = exp_info['age']
+gender          = exp_info['gender']
+# handedness      = exp_info[]
 filename        = f"data/{participant_id}_cpt"
 this_exp        = data.ExperimentHandler(dataFileName=filename, extraInfo=exp_info)
 #logging.LogFile(f"{filename}.log", level=logging.EXP)
@@ -53,7 +61,7 @@ def three_two_one():
     three = visual.TextStim(win, text='3', color ="gray", height = 0.2)
     two = visual.TextStim(win, text='2', color ="gray", height = 0.2)
     one = visual.TextStim(win, text='1', color ="gray", height = 0.2)
-    go  = visual.TextStim(win, text = 'go!', color ="gray", height = 0.2)
+    go  = visual.TextStim(win, text = 'go!', color ="gray", height = 0.3, pos = (0, 0.03))
     
     draw_then_wait(ready, 1)
     draw_then_wait(three, 1)
@@ -77,14 +85,16 @@ def block(block_num, num_stimuli, num_targets):
         
         # Draw stimulus 
         draw_then_wait(stimulus, stim_duration)
-        
-        # Draw intial static fixation ISI (isi_static_addition)
+
+        # Getting the ISI index(weighted randomization)
+        index_of_isi = choice((len(isi_duration)), 1, p= [0.5, 0.3, 0.2])
+
+        # Draw dynamic fixation ISI (isi_duration)
         win.flip()
-        draw_then_wait(fixation, isi_static_addition)
+        draw_then_wait(fixation, (isi_duration[index_of_isi[0]]))
     
         # Record response
         keys = event.getKeys(keyList=["space", "escape"], timeStamped=rt_clock)
-        print(keys)
         
         # Check for quit during response collection
         for key, rt in keys:
@@ -101,22 +111,29 @@ def block(block_num, num_stimuli, num_targets):
         else:
             response_key, rt = None, None
             accuracy = True if stim == target else False
-            
+
         # Add data into the csv
         this_exp.addData('block_num', block_num + 1)
         this_exp.addData('participant_id', participant_id)
+        this_exp.addData('age', age)
+        # this_exp.addData('handedness', handedness)
+        this_exp.addData('gender', gender)
         this_exp.addData('trial_num', stim_num + 1)
         this_exp.addData('stimulus', stim)
         this_exp.addData('response_key', response_key)
         this_exp.addData('reaction_time', rt)
         this_exp.addData('accuracy', accuracy)
+        this_exp.addData('ISI', isi_duration[index_of_isi[0]] + isi_static_addition)
         this_exp.nextEntry()
         
-        # Draw final dynamic fixation ISI (isi_duration)
-        draw_then_wait(fixation, (isi_duration[(random.randrange(len(isi_duration)))]))
-        
+        # # Draw dynamic fixation ISI (isi_duration)
+        # draw_then_wait(fixation, (isi_duration[index_of_isi[0]]))
+
+        # Draw final static fixation ISI (isi_static_addition)
+        draw_then_wait(fixation, isi_static_addition)
+
 # Draw Instructions
-instructions = visual.TextStim(win, text='Press the spacebar when you see "X". Experimenter will continue task when you are ready!', color='black')
+instructions = visual.TextStim(win, text='Press the spacebar when you see a letter EXCEPT "X". Experimenter will continue task when you are ready!', color='black')
 draw_then_waitkeys(instructions)
     
 # Practice Block
@@ -124,9 +141,9 @@ for block_num in range(1):
     three_two_one() # ready, set, go
     
     # draw fixation before presenting stimulus
-    draw_then_wait(fixation, (isi_duration[(random.randrange(len(isi_duration)))]))
+    draw_then_wait(fixation, 2)
     
-    block(block_num, 5, 1)
+    block(block_num, 20, 2)
     # block_num      = current block number
     # block(_, #, _) = number of trials
     # block(_, _, #) = number of stop trials within num_trials
@@ -142,10 +159,10 @@ for block_num in range(num_of_blocks):
     three_two_one() # ready, set, go
     
     # draw fixation before presenting stimulus
-    draw_then_wait(fixation, (isi_duration[(random.randrange(len(isi_duration)))]))
+    draw_then_wait(fixation, 2)
     
     # running the block
-    block(block_num, 10, 1)
+    block(block_num, 60, 6)
     
     # block_num      = current block number
     # block(_, #, _) = number of trials
@@ -164,7 +181,7 @@ this_exp.saveAsPickle(filename)
 logging.flush()
 
 df = pd.read_csv(filename + ".csv")
-df_clean = df.filter(['participant_id', 'trial_num', 'stimulus', 'response_key', 'reaction_time', 'accuracy', 'date', 'block_num'])
+df_clean = df.filter(['age', 'gender', 'participant_id', 'trial_num', 'stimulus', 'response_key', 'reaction_time', 'accuracy', 'date', 'block_num'])
 df_clean.to_csv(filename + "_clean.csv", index=False)
 
 # Close everything
