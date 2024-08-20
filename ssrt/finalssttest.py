@@ -23,12 +23,13 @@ def get_experiment_info():
 
 # Setup
 def setup_experiment(exp_info):
-    base_directory = "/Users/heyodogo/Documents/ssrt_folder"
-    os.chdir(base_directory)
+    base_directory = os.path.dirname(os.path.abspath(__file__))
     
     data_directory = os.path.join(base_directory, "data")
     if not os.path.exists(data_directory):
         os.makedirs(data_directory)
+    
+    os.chdir(base_directory)
     
     win = visual.Window([800, 600], color="white", fullscr=False, units='height')
     
