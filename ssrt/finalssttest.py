@@ -163,11 +163,11 @@ def run_trial(win, stimuli, trial_type, stop_signal_delay, trial_duration, stop_
     if random.choice(['left', 'right']) == 'left':
         go_stim = stimuli['go_stim_left']
         expected_response = "left"
-        sst_stimfile = "left_arrow.bmp"
+        sst_stimfile = "blue_bird_left"
     else:
         go_stim = stimuli['go_stim_right']
         expected_response = "right"
-        sst_stimfile = "right_arrow.bmp"
+        sst_stimfile = "blue_bird_right"
 
     rt_clock = clock.Clock()
     event.clearEvents(eventType='keyboard')
